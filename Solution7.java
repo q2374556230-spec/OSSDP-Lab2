@@ -2,6 +2,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+
 /**
  * @description:
  *
@@ -46,50 +47,45 @@ import java.util.PriorityQueue;
  * s 中只含有小写英文字母
  *
  */
-
 public class Solution7 {
-
     public String smallestStringWithSwaps(String s, List<List<Integer>> pairs) {
-
-        if (pairs.size() <= 1) {
+        // Bug 1 修复：pairs 为空时才直接返回
+        if (pairs.size() == 0) {
             return s;
         }
-
         // 第 1 步：将任意交换的结点对输入并查集
         int len = s.length();
-        UnionFind unionFind = new UnionFind(len-1);
+        // Bug 2 修复：并查集大小应该是 len
+        UnionFind unionFind = new UnionFind(len);
         for (List<Integer> pair : pairs) {
             int index1 = pair.get(0);
             int index2 = pair.get(1);
             unionFind.union(index1, index2);
         }
-
         // 第 2 步：构建映射关系
         char[] charArray = s.toCharArray();
         // key：连通分量的代表元，value：同一个连通分量的字符集合（保存在一个优先队列中）
         Map<Integer, PriorityQueue<Character>> hashMap = new HashMap<>(len);
-        for (int i = 0; i < len; i++)
+        // Bug 3 修复：添加大括号
+        for (int i = 0; i < len; i++) {
             int root = unionFind.find(i);
             hashMap.computeIfAbsent(root, key -> new PriorityQueue<>()).offer(charArray[i]);
-
+        }
         // 第 3 步：重组字符串
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < len; i++) {
             int root = unionFind.find(i);
             stringBuilder.append(hashMap.get(root).poll());
-            stringBuilder.append(" ");
+            // Bug 4 修复：删除多余的空格
         }
         return stringBuilder.toString();
     }
-
     private class UnionFind {
-
         private int[] parent;
         /**
          * 以 i 为根结点的子树的高度（引入了路径压缩以后该定义并不准确）
          */
         private int[] rank;
-
         public UnionFind(int n) {
             this.parent = new int[n];
             this.rank = new int[n];
@@ -98,14 +94,12 @@ public class Solution7 {
                 this.rank[i] = 1;
             }
         }
-
         public void union(int x, int y) {
             int rootX = find(x);
             int rootY = find(y);
             if (rootX == rootY) {
                 return;
             }
-
             if (rank[rootX] == rank[rootY]) {
                 parent[rootX] = rootY;
                 // 此时以 rootY 为根结点的树的高度仅加了 1
@@ -118,7 +112,6 @@ public class Solution7 {
                 parent[rootY] = rootX;
             }
         }
-
         public int find(int x) {
             if (x != parent[x]) {
                 parent[x] = find(parent[x]);
